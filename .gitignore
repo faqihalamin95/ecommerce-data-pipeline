@@ -1,0 +1,14 @@
+# Data layers
+data/raw/
+data/staging/
+data/marts/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
