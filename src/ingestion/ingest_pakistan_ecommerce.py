@@ -19,7 +19,7 @@ engine = create_engine(DB_URL)
 
 # Load CSV
 file_path = "data/raw/pakistan_largest_ecommerce_dataset.csv"
-df = pd.read_csv(file_path)
+df = pd.read_csv(file_path, low_memory=False)
 
 # Normalize column names
 df.columns = (
