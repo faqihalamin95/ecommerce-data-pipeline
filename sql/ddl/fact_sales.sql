@@ -8,10 +8,9 @@ CREATE TABLE IF NOT EXISTS mart.fact_sales (
     order_id       TEXT,
     item_id        TEXT,
 
-    qty_ordered    INT,
-    price          NUMERIC(12,2),
+    qty_ordered    INT NOT NULL,
+    price          NUMERIC(12,2) NOT NULL,
     discount_amount NUMERIC(12,2),
-    grand_total    NUMERIC(12,2),
 
     CONSTRAINT fk_date
         FOREIGN KEY (date_key) REFERENCES mart.dim_date(date_key),
