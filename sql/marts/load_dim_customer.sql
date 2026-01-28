@@ -1,3 +1,4 @@
+-- Seed unknown customer record for referential integrity
 INSERT INTO mart.dim_customer (
     customer_key,
     customer_id,
@@ -8,7 +9,6 @@ INSERT INTO mart.dim_customer (
     effective_end_date,
     is_current
 )
--- unknown row
 VALUES (
     -1,
     'UNKNOWN',
@@ -21,10 +21,11 @@ VALUES (
 )
 ON CONFLICT (customer_key) DO NOTHING;
 
+-- Aggregate customer attributes from raw transactions
 WITH customer_base AS (
     SELECT
         "customer_id"::TEXT AS customer_id,
-        MIN(created_at)::DATE AS first_order_date,
+        MIN(created_at)::DATE AS first_order_date, 
         MAX(created_at)::DATE AS last_order_date,
         COALESCE(
             MIN("customer_since")::DATE,
@@ -35,7 +36,6 @@ WITH customer_base AS (
         "customer_id" IS NOT NULL
     GROUP BY "customer_id"
 )
-
 INSERT INTO mart.dim_customer (
     customer_id,
     customer_since,

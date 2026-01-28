@@ -1,3 +1,5 @@
+-- Load fact_sales table from raw Pakistan e-commerce data
+-- Grain: one row per order item
 INSERT INTO mart.fact_sales (
     date_key,
     product_key,
@@ -25,8 +27,10 @@ LEFT JOIN mart.dim_product p
 LEFT JOIN mart.dim_customer c
     ON c.customer_id = r.customer_id::TEXT
    AND c.is_current = TRUE
+-- Only completed orders with valid product and customer
 WHERE
     r.sku IS NOT NULL
     AND r.customer_id IS NOT NULL
     AND r.status = 'complete'
+-- Idempotent, append-only fact load (use DO UPDATE if source data is mutable)
 ON CONFLICT (order_id, item_id) DO NOTHING;

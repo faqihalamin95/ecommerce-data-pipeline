@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS mart.fact_sales (
     price          NUMERIC(12,2) NOT NULL,
     discount_amount NUMERIC(12,2),
 
+    -- Add unique constraint to prevent duplicate sales records
     CONSTRAINT fk_date
         FOREIGN KEY (date_key) REFERENCES mart.dim_date(date_key),
 
