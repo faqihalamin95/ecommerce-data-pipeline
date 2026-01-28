@@ -2,8 +2,8 @@ import pandas as pd
 from src.utils.db import get_engine
 
 # NOTE:
-# This staging step is used for data inspection and debugging.
-# Downstream marts currently read directly from raw tables.
+# This staging step is intended for data inspection and debugging only.
+# Downstream mart models currently read directly from raw tables.
 
 def run():
     print("Starting Data Quality Checks (Staging)...")
@@ -16,7 +16,6 @@ def run():
 
     total_rows = len(df)
 
-    # Data Quality Checks
     qc = {
         "total_rows": total_rows,
         "null_created_at": df["created_at"].isna().sum(),
@@ -35,13 +34,13 @@ def run():
     print("\n=== DATA QUALITY SUMMARY ===")
     print(qc_df)
 
-    # Persist QC report (optional)
     qc_df.to_csv(
         "data/staging/data_quality_report.csv",
         index=False
     )
 
-    # Hard fail (optional)
+    # Critical QC check: created_at defines the time grain of the fact table
+    # Currently logs a warning; can be promoted to a hard fail if required
     if qc["null_created_at"] > 0:
         print("WARNING: Found rows with NULL created_at")
 
