@@ -1,25 +1,25 @@
-import os
+from pathlib import Path
 from sqlalchemy import text
 from src.utils.db import get_engine
 
-def execute_sql_file(engine, file_path):
+def execute_sql_file(engine, file_path: Path):
     """Read and Execute SQL File"""
-    print(f"Executing: {file_path}")
+    print(f"Executing: {file_path.name}")
     
-    with open(file_path, "r") as f:
-        query = f.read()
+    query = file_path.read_text()
         
-    with engine.connect() as conn:
-        # Using text() from sqlalchemy for raw query
-        conn.execute(text(query))
-        conn.commit()
+    with engine.begin() as conn:
+        for stmt in query.split(";"):
+            if stmt.strip():
+                conn.execute(text(stmt))
 
 def run():
     print("Building data marts...")
     engine = get_engine()
     
-    # Order of execution is IMPORTANT: Dimension first, then Fact
-    # Because Fact tables have Foreign Keys to Dimension tables
+    # IMPORTANT:
+    # Dimensions must be loaded before facts.
+    # Fact tables depend on dimension surrogate keys (foreign key references).
     sql_files = [
         "sql/marts/load_dim_date.sql",
         "sql/marts/load_dim_customer.sql",
@@ -27,17 +27,20 @@ def run():
         "sql/marts/load_fact_sales.sql"
     ]
 
-    base_dir = os.getcwd() # Get project root directory
+    # Resolve project root dynamically to allow execution
+    # from different working directories
+    project_root = Path(__file__).resolve().parents[2]
+    marts_dir = project_root / "sql" / "marts"
 
     for file_name in sql_files:
-        full_path = os.path.join(base_dir, file_name)
+        file_path = marts_dir / file_name
         try:
-            execute_sql_file(engine, full_path)
+            execute_sql_file(engine, file_path)
             print(f"Success: {file_name}")
         except Exception as e:
+            # Fail fast: stop the pipeline on any critical mart load error
             print(f"Error executing {file_name}: {e}")
-            # Stop pipeline if there is a critical error
-            raise e
+            raise
 
     print("Data marts built successfully.")
 
