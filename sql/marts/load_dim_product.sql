@@ -32,7 +32,7 @@ UPDATE mart.dim_product p
 SET is_active = TRUE
 FROM (
     SELECT DISTINCT product_key
-    FROM mart.fact_orders
+    FROM mart.fact_sales
     WHERE order_date >= CURRENT_DATE - INTERVAL '90 days' 
 ) active_products
 WHERE p.product_key = active_products.product_key;
@@ -42,7 +42,7 @@ UPDATE mart.dim_product
 SET is_active = FALSE 
 WHERE product_key NOT IN (
     SELECT DISTINCT product_key
-    FROM mart.fact_orders
+    FROM mart.fact_sales
     WHERE order_date >= CURRENT_DATE - INTERVAL '90 days'
 )
 AND product_key <> -1;
