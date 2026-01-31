@@ -1,4 +1,4 @@
--- 1. Null foreign keys
+-- 1. No NULL foreign keys (UNKNOWN allowed as -1)
 
 SELECT COUNT(*) AS null_date_key
 FROM mart.fact_sales
@@ -12,13 +12,17 @@ SELECT COUNT(*) AS null_customer_key
 FROM mart.fact_sales
 WHERE customer_key IS NULL;
 
--- 2. No negative quantities or amounts
+-- 2. No invalid measures
 
-SELECT COUNT(*) AS negative_sales
+SELECT COUNT(*) AS invalid_qty
 FROM mart.fact_sales
-WHERE sales_amount < 0;
+WHERE qty_ordered <= 0;
 
--- 3. Orphan foreign keys 
+SELECT COUNT(*) AS invalid_price
+FROM mart.fact_sales
+WHERE price < 0;
+
+-- 3. No orphan foreign keys (including UNKNOWN seed)
 
 SELECT COUNT(*) AS orphan_date_key
 FROM mart.fact_sales f
@@ -37,4 +41,3 @@ FROM mart.fact_sales f
 LEFT JOIN mart.dim_customer c
   ON f.customer_key = c.customer_key
 WHERE c.customer_key IS NULL;
-

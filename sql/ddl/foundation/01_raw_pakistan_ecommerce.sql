@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS raw.pakistan_ecommerce_raw (
     fy                       VARCHAR,
     customer_id              VARCHAR,
 
-    -- audit columns
+    -- Audit columns
     ingestion_time           TIMESTAMP,
     source_file              VARCHAR
 );
