@@ -1,31 +1,51 @@
 from src.utils.db import get_engine
 from sqlalchemy import text
+from pathlib import Path
+
+DDL_BASE_PATH = Path("sql/ddl")
+
+DDL_FOLDERS = [
+    "raw",
+    "foundation",
+    "marts"        
+]
+
+SCHEMAS = [
+    "raw",
+    "mart"
+]
+
+def run_ddl_from_folder(conn, folder_path: Path):
+    ddl_files = sorted(folder_path.glob("*.sql"))
+
+    for ddl_file in ddl_files:
+        print(f"Running DDL: {ddl_file}")
+        with ddl_file.open("r") as f:
+            query = f.read()
+            conn.execute(text(query))
+
 
 def init_tables():
     engine = get_engine()
-    ddl_files = [
-        "sql/ddl/01_raw_pakistan_ecommerce.sql",
-        "sql/ddl/dim_date.sql",
-        "sql/ddl/dim_customer.sql",
-        "sql/ddl/dim_product.sql",
-        "sql/ddl/fact_sales.sql"
-    ]
 
-    print("Initializing Database Tables...")
-    with engine.connect() as conn:
-        # CREATE SCHEMAS FIRST
-        conn.execute(text("CREATE SCHEMA IF NOT EXISTS raw;"))
-        conn.execute(text("CREATE SCHEMA IF NOT EXISTS mart;"))
-        conn.commit()
+    print("Initializing database schemas and tables...")
 
-        for file in ddl_files:
-            with open(file, "r") as f:
-                query = f.read()
-                print(f"Running DDL: {file}")
-                conn.execute(text(query))
-                conn.commit()
+    with engine.begin() as conn:
+        # Create schemas
+        for schema in SCHEMAS:
+            conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema};"))
 
-    print("Tables created.")
+        # Run DDLs by folder (ordered)
+        for folder in DDL_FOLDERS:
+            folder_path = DDL_BASE_PATH / folder
+
+            if not folder_path.exists():
+                raise FileNotFoundError(f"DDL folder not found: {folder_path}")
+
+            run_ddl_from_folder(conn, folder_path)
+
+    print("Database initialization completed successfully.")
+
 
 if __name__ == "__main__":
     init_tables()
