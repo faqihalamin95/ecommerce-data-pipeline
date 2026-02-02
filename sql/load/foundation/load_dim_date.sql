@@ -27,7 +27,7 @@ VALUES (
     FALSE
 );
 
--- Determine date range from raw transaction timestamps
+-- Determine date range from staging transaction timestamps
 WITH date_bounds AS (
     SELECT
         MIN(created_at)::DATE AS min_date,
@@ -48,22 +48,22 @@ INSERT INTO foundation.dim_date (
     is_weekend
 )
 SELECT
-    TO_CHAR(d, 'YYYYMMDD')::INT AS date_key,
-    d AS full_date,
-    EXTRACT(DAY FROM d)::SMALLINT AS day,
-    EXTRACT(MONTH FROM d)::SMALLINT AS month,
-    TRIM(TO_CHAR(d, 'Month')) AS month_name,
-    EXTRACT(QUARTER FROM d)::SMALLINT AS quarter,
-    EXTRACT(YEAR FROM d)::INT AS year,
-    EXTRACT(ISODOW FROM d)::SMALLINT AS day_of_week, -- 1=Monday, 7=Sunday
-    TRIM(TO_CHAR(d, 'Day')) AS day_name,
+    TO_CHAR(d.full_date, 'YYYYMMDD')::INT        AS date_key,
+    d.full_date                                  AS full_date,
+    EXTRACT(DAY FROM d.full_date)::SMALLINT      AS day,
+    EXTRACT(MONTH FROM d.full_date)::SMALLINT    AS month,
+    TRIM(TO_CHAR(d.full_date, 'Month'))          AS month_name,
+    EXTRACT(QUARTER FROM d.full_date)::SMALLINT  AS quarter,
+    EXTRACT(YEAR FROM d.full_date)::INT           AS year,
+    EXTRACT(ISODOW FROM d.full_date)::SMALLINT   AS day_of_week, -- 1=Mon, 7=Sun
+    TRIM(TO_CHAR(d.full_date, 'Day'))            AS day_name,
     CASE
-        WHEN EXTRACT(DOW FROM d) IN (0, 6) THEN TRUE
+        WHEN EXTRACT(ISODOW FROM d.full_date) IN (6, 7) THEN TRUE
         ELSE FALSE
-    END AS is_weekend
+    END                                          AS is_weekend
 FROM date_bounds,
      generate_series(
          date_bounds.min_date,
          date_bounds.max_date,
          INTERVAL '1 day'
-     ) AS d;
+     ) AS d(full_date);
