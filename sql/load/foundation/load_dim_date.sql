@@ -1,5 +1,8 @@
+-- TRUNCATE AND LOAD dim_date dimension table
+TRUNCATE TABLE foundation.dim_date;
+
 -- Seed unknown date record for referential integrity
-INSERT INTO mart.dim_date (
+INSERT INTO foundation.dim_date (
     date_key,
     full_date,
     day,
@@ -22,19 +25,17 @@ VALUES (
     0,
     'Unknown',
     FALSE
-)
-ON CONFLICT (date_key) DO NOTHING;
+);
 
 -- Determine date range from raw transaction timestamps
 WITH date_bounds AS (
     SELECT
         MIN(created_at)::DATE AS min_date,
         MAX(created_at)::DATE AS max_date
-    FROM raw.pakistan_ecommerce_raw
+    FROM staging.stg_pakistan_ecommerce
     WHERE created_at IS NOT NULL
 )
-
-INSERT INTO mart.dim_date (
+INSERT INTO foundation.dim_date (
     date_key,
     full_date,
     day,
@@ -54,7 +55,7 @@ SELECT
     TRIM(TO_CHAR(d, 'Month')) AS month_name,
     EXTRACT(QUARTER FROM d)::SMALLINT AS quarter,
     EXTRACT(YEAR FROM d)::INT AS year,
-    EXTRACT(DOW FROM d)::SMALLINT AS day_of_week, -- PostgreSQL: 0=Sunday
+    EXTRACT(ISODOW FROM d)::SMALLINT AS day_of_week, -- 1=Monday, 7=Sunday
     TRIM(TO_CHAR(d, 'Day')) AS day_name,
     CASE
         WHEN EXTRACT(DOW FROM d) IN (0, 6) THEN TRUE
@@ -65,5 +66,4 @@ FROM date_bounds,
          date_bounds.min_date,
          date_bounds.max_date,
          INTERVAL '1 day'
-     ) AS d
-ON CONFLICT (date_key) DO NOTHING;
+     ) AS d;

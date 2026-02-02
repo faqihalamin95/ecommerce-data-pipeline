@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS mart.dim_date (
+CREATE TABLE IF NOT EXISTS foundation.dim_date (
     date_key     INT PRIMARY KEY,          
     full_date    DATE NOT NULL UNIQUE,
     day          SMALLINT NOT NULL,

@@ -5,8 +5,7 @@ data/raw/*
 data/reports/*
 !data/reports/.gitkeep
 
-# Config & secrets
-config/database.env
+# Environment variables / secrets
 .env
 
 # Python

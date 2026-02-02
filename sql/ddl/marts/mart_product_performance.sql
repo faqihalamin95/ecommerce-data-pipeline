@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS mart.mart_product_performance (
     gross_revenue        NUMERIC(14,2) NOT NULL DEFAULT 0,
     total_discounts      NUMERIC(14,2) NOT NULL DEFAULT 0,
     net_revenue          NUMERIC(14,2) NOT NULL DEFAULT 0,
-    average_price        NUMERIC(14,2),
+    average_price        NUMERIC(14,2) NOT NULL DEFAULT 0,
     total_customers      INTEGER NOT NULL DEFAULT 0,
 
     -- Audit columns

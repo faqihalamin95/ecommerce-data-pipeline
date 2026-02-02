@@ -1,16 +1,22 @@
 import pandas as pd
 from src.utils.db import get_engine
 
-# NOTE:
-# This script performs data quality checks on raw ingestion tables.
-# It does not transform or materialize data for downstream consumption.
+# This script performs data quality checks on staging tables.
 
 def run():
     print("Starting Data Quality Checks (Staging)...")
     engine = get_engine()
 
     df = pd.read_sql(
-        "SELECT * FROM raw.pakistan_ecommerce_raw",
+        """
+        SELECT
+            created_at,
+            sku,
+            customer_id,
+            price,
+            qty_ordered
+        FROM staging.stg_pakistan_ecommerce
+        """,
         engine
     )
 
@@ -35,16 +41,16 @@ def run():
     print(qc_df)
 
     qc_df.to_csv(
-        "data/staging/data_quality_report.csv",
+        "data/reports/data_quality_report.csv",
         index=False
     )
 
-    # Critical QC check: created_at defines the time grain of the fact table
     # Currently logs a warning; can be promoted to a hard fail if required
+    # created_at is chosen, because it's a critical field for time-based analyses
     if qc["null_created_at"] > 0:
         print("WARNING: Found rows with NULL created_at")
 
-    print("Staging QC completed.")
+    print("Data staging QC completed.")
 
 if __name__ == "__main__":
     run()

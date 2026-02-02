@@ -2,6 +2,7 @@ import pandas as pd
 from datetime import datetime
 import os
 from src.utils.db import get_engine
+from sqlalchemy import text
 
 def run():
     # Get database engine
@@ -12,10 +13,11 @@ def run():
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
 
-    df = pd.read_csv(file_path, low_memory=False)
     # low_memory=False to prevent dtype warning
-
-    # Normalize column names
+    df = pd.read_csv(file_path, low_memory=False)
+    # drop unnamed columns
+    df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+    # normalize column names
     df.columns = (
         df.columns
         .str.strip()
@@ -23,19 +25,14 @@ def run():
         .str.replace(" ", "_")
         .str.replace("-", "_")
     )
-
-    # Basic type handling
-    df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce")
-    df["working_date"] = pd.to_datetime(df["working_date"], errors="coerce")
-    df["customer_since"] = pd.to_datetime(df["customer_since"], errors="coerce")
-
+    
     # Audit columns
     df["ingestion_time"] = datetime.now()
     df["source_file"] = os.path.basename(file_path)
 
     # Load to PostgreSQL (idempotent pattern)
     with engine.begin() as conn:
-        conn.execute("TRUNCATE TABLE raw.pakistan_ecommerce_raw;")
+        conn.execute(text("TRUNCATE TABLE raw.pakistan_ecommerce_raw;"))
         df.to_sql(
             name="pakistan_ecommerce_raw",
             schema="raw",

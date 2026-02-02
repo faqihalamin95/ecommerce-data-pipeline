@@ -6,12 +6,15 @@ DDL_BASE_PATH = Path("sql/ddl")
 
 DDL_FOLDERS = [
     "raw",
+    "staging",
     "foundation",
     "marts"        
 ]
 
 SCHEMAS = [
     "raw",
+    "staging",
+    "foundation",
     "mart"
 ]
 

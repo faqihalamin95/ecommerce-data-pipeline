@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 # 1. Load file environment configuration
-load_dotenv("config/database.env")
+load_dotenv()
 
 def get_db_url():
     """Build string database connection from environment variables"""

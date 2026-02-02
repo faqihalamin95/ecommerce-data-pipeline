@@ -22,16 +22,18 @@ ingest:
 
 staging:
 	@echo "Running staging data quality checks..."
-	$(PYTHON) src/staging/load_staging.py
+	$(PYTHON) src/staging/stg_pakistan_ecommerce.py 
+
+# First level data quality checks
+data-quality-checks:
+	@echo "Running staging data quality tests..."
+	$(PYTHON) data_quality/qc_raw_pakistan_ecommerce.py
 
 marts:
 	@echo "Building data marts..."
 	$(PYTHON) src/marts/load_marts.py
 
-# ===============================
 # Final Quality Gate
-# ===============================
-
 test:
 	@echo "Running final fact data quality tests..."
 	psql -U postgres -d ecommerce_dwh -f tests/fact_sales_quality.sql
@@ -40,7 +42,7 @@ test:
 # Full Pipeline
 # ===============================
 
-run-all: ingest staging marts test
+run-all: init-db ingest staging data-quality-checks marts test
 	@echo "========================================"
 	@echo "PIPELINE COMPLETED — ALL TESTS PASSED"
 	@echo "========================================"

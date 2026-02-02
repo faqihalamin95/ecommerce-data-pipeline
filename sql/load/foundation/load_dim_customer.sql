@@ -1,27 +1,23 @@
+-- TRUNCATE AND LOAD dim_customer dimension table
+TRUNCATE TABLE foundation.dim_customer;
+
 -- Seed unknown customer record for referential integrity
-INSERT INTO mart.dim_customer (
+INSERT INTO foundation.dim_customer (
     customer_key,
     customer_id,
     customer_since,
     first_order_date,
-    last_order_date,
-    effective_start_date,
-    effective_end_date,
-    is_current
+    last_order_date
 )
 VALUES (
     -1,
     'UNKNOWN',
     NULL,
     NULL,
-    NULL,
-    DATE '1900-01-01',
-    NULL,
-    TRUE
-)
-ON CONFLICT (customer_key) DO NOTHING;
+    NULL
+);
 
--- Aggregate customer attributes from raw transactions
+-- Aggregate customer attributes from staging table
 WITH customer_base AS (
     SELECT
         "customer_id"::TEXT AS customer_id,
@@ -31,27 +27,19 @@ WITH customer_base AS (
             MIN("customer_since")::DATE,
             MIN(created_at)::DATE
         ) AS customer_since
-    FROM raw.pakistan_ecommerce_raw
-    WHERE
-        "customer_id" IS NOT NULL
+    FROM staging.stg_pakistan_ecommerce
+    WHERE "customer_id" IS NOT NULL
     GROUP BY "customer_id"
 )
-INSERT INTO mart.dim_customer (
+INSERT INTO foundation.dim_customer (
     customer_id,
     customer_since,
     first_order_date,
-    last_order_date,
-    effective_start_date,
-    effective_end_date,
-    is_current
+    last_order_date
 )
 SELECT
     customer_id,
     customer_since,
     first_order_date,
-    last_order_date,
-    first_order_date AS effective_start_date,
-    NULL AS effective_end_date,
-    TRUE AS is_current
-FROM customer_base
-ON CONFLICT (customer_id, effective_start_date) DO NOTHING;
+    last_order_date
+FROM customer_base;
