@@ -82,8 +82,8 @@ ecommerce-data-pipeline/
 ### 1️⃣ Raw Layer
 - Direct ingestion from CSV files
 - Basic cleaning in pandas:
-    - - drop unnamed columns
-    - - normalize column names
+    - drop unnamed columns
+    - normalize column names
 - Stored as TEXT-typed columns
 - Acts as a 1:1 copy of the source
 - Primary input for staging
@@ -95,22 +95,22 @@ ecommerce-data-pipeline/
 
 ### 3️⃣ Foundation Layer
 - Characteristics:
-    - - Contains dimension and fact tables
-    - - Fully rebuilt on every run
-    - - No history tracking
-    - - Deterministic and reproducible
+    - Contains dimension and fact tables
+    - Fully rebuilt on every run
+    - No history tracking
+    - Deterministic and reproducible
 - Foundation is not:
-    - - a BI consumption layer
-    - - a storage layer
-    - - a place for business aggregation
+    - a BI consumption layer
+    - a storage layer
+    - a place for business aggregation
 All downstream marts must be built from foundation.
 
 ### 4️⃣ Marts Layer
 - Business consumption layer.
 - Characteristics:
-    - - Built only from foundation
-    - - Contains business-level aggregations and reshaping
-    - - No surrogate keys or foreign keys
+    - Built only from foundation
+    - Contains business-level aggregations and reshaping
+    - No surrogate keys or foreign keys
 
 ---
 
@@ -147,10 +147,10 @@ Implications:
 - Purpose: guarantee foundation readiness
 - Output: CSV reports in data/reports/
 - Examples:
-    - - foreign key integrity
-    - - null critical fields
-    - - invalid measures
-    - - orphan records
+    - foreign key integrity
+    - null critical fields
+    - invalid measures
+    - orphan records
 If any check fails → pipeline stops.
 
 ---
@@ -170,7 +170,7 @@ Initialize Database
 
 ## 📊 Business Marts (LOCKED)
 
-Phase-2 explicitly builds only three marts to avoid scope creep:
+Explicitly builds only three marts to avoid scope creep:
 
 ### 1️⃣ mart_sales_daily
 - Grain: 1 row per date
@@ -183,8 +183,6 @@ Phase-2 explicitly builds only three marts to avoid scope creep:
 ### 3️⃣ mart_customer_summary
 - Grain: 1 row per customer
 - Purpose: customer value & behavior summary
-
-No additional marts are built in Phase-2.
 
 ---
 
