@@ -1,14 +1,17 @@
-# E-Commerce Data Pipeline
+# E-Commerce Data Warehouse Pipeline
 
 ## 📌 Overview
-This project implements an **end-to-end data pipeline** for an e-commerce system, transforming raw transactional data into analytics-ready data marts.
+This project implements an **end-to-end data warehouse pipeline** using a real-world e-commerce dataset (Pakistan Largest E-Commerce Dataset).
 
-The main goal of this project is to demonstrate **data engineering fundamentals**:
-- data ingestion
-- layered data modeling (raw → staging → marts)
-- reproducible pipelines
-- basic data quality checks
-- clear project structure
+The pipeline transforms raw transactional CSV data into **business-ready marts** through a clearly defined, reproducible, and auditable workflow stored in PostgreSQL.
+
+The primary objective of this project is to demonstrate **data engineering fundamentals** including:
+- deterministic batch processing
+- layered data architecture (raw → staging → foundation → marts)
+- dimensional modeling (fact & dimensions)
+- idempotent and reproducible pipelines
+- basic data quality validation
+- SQL-driven transformations
 
 This is **not a dashboard or BI project**, but a **pipeline-focused data engineering project**.
 
@@ -16,16 +19,18 @@ This is **not a dashboard or BI project**, but a **pipeline-focused data enginee
 
 ## 🧱 Architecture Overview
 ```text
-Raw Data (CSV)
+CSV Source File
 ↓
-Ingestion Layer
+Raw Layer
 ↓
-Staging Layer (cleaned & standardized)
+Staging Layer (data normalization & QC)
 ↓
-Marts Layer (analytics-ready tables)
+Foundation Layer (Star schema & Final QC)
+↓
+Marts Layer 
 ```
 
-Each layer is executed as an independent step and orchestrated locally using a `Makefile`.
+Each layer has clear responsibility boundaries and is executed as a separate pipeline step, orchestrated locally via `Makefile`.
 
 ---
 
@@ -34,72 +39,152 @@ Each layer is executed as an independent step and orchestrated locally using a `
 ecommerce-data-pipeline/
 │
 ├── data/
-│ ├── raw/ # Raw source data (CSV / JSON)
-│ ├── staging/ # Cleaned and standardized data
-│ └── marts/ # Analytics-ready data marts
+│   ├── raw/          # Source CSV data (post-ingestion)
+│   └── reports/      # Data quality reports (CSV)
 │
 ├── src/
-│ ├── ingestion/ # Raw data ingestion logic
-│ ├── staging/ # Raw → staging transformations
-│ ├── marts/ # Build fact & dimension tables
-│ └── utils/ # Shared utilities (logging, helpers)
+│   ├── ingestion/    # CSV → raw ingestion (pandas)
+│   ├── qc/           # Data quality execution logic
+│   ├── foundation/   # Foundation layer orchestration
+│   ├── marts/        # Marts layer orchestration
+│   └── utils/
+│       ├── db.py
+│       └── init_db.py
 │
 ├── sql/
-│ ├── ddl/ # Table definitions
-│ └── marts/ # Analytics queries (optional)
+│   ├── ddl/
+│   │   ├── raw/
+│   │   ├── staging/
+│   │   ├── foundation/
+│   │   └── marts/
+│   │
+│   ├── load/
+│   │   ├── staging/
+│   │   ├── foundation/
+│   │   │   ├── dim/
+│   │   │   └── fact/
+│   │   └── marts/
+│   │
+│   └── qc/
+│       ├── qc_staging.sql
+│       └── qc_foundation.sql
 │
-├── tests/ # Basic data quality checks
-├── config/ # Pipeline configuration
-│
-├── Makefile # Pipeline orchestration
+├── .env
+├── Makefile
 ├── README.md
-├── requirements.txt
-└── .gitignore
+└── requirements.txt
 ```
 
 ---
 
-## 📊 Data Model (High Level)
+## 🧱 Layer Responsibilities
 
-This pipeline is built around three core entities:
+### 1️⃣ Raw Layer
+- Direct ingestion from CSV files
+- Basic cleaning in pandas:
+    - - drop unnamed columns
+    - - normalize column names
+- Stored as TEXT-typed columns
+- Acts as a 1:1 copy of the source
+- Primary input for staging
 
-- **customers**
-- **orders**
-- **order_items**
+### 2️⃣ Staging Layer
+- Converts TEXT columns into proper data types
+- Applies standardization and formatting
+- No business logic or aggregation
 
-Relationships:
-- One customer can have many orders
-- One order can have many order items
+### 3️⃣ Foundation Layer
+- Characteristics:
+    - - Contains dimension and fact tables
+    - - Fully rebuilt on every run
+    - - No history tracking
+    - - Deterministic and reproducible
+- Foundation is not:
+    - - a BI consumption layer
+    - - a storage layer
+    - - a place for business aggregation
+All downstream marts must be built from foundation.
 
-The data is intentionally modeled in multiple layers to simulate real-world data pipelines.
+### 4️⃣ Marts Layer
+- Business consumption layer.
+- Characteristics:
+    - - Built only from foundation
+    - - Contains business-level aggregations and reshaping
+    - - No surrogate keys or foreign keys
 
 ---
 
-## ⚙️ Pipeline Steps
+## 🔁 SCD Policy
 
-### 1️⃣ Ingestion
-- Reads source data
-- Splits and stores entity-based raw tables
-- Writes output to `data/raw/`
+All dimension tables use:
 
-### 2️⃣ Staging
-- Cleans and standardizes raw data
-- Handles missing values and basic validation
-- Writes output to `data/staging/`
+**Slowly Changing Dimension (SCD) Type 1**
 
-### 3️⃣ Marts
-- Builds analytics-ready fact and dimension tables
-- Writes output to `data/marts/`
+Rationale:
+- Single-batch data
+- No historical requirements
+- Avoids overengineering
+
+Implications:
+- Old values are overwritten
+- No effective date tracking
 
 ---
 
-## 🧪 Data Quality Checks
-Basic data quality validations are applied, such as:
-- non-empty datasets
-- non-null primary keys
-- referential integrity between tables
+## 🧪 Data Quality Policy
 
-These checks ensure that downstream data is reliable.
+### Early Data Quality (Staging)
+- Location: sql/qc/qc_staging.sql
+- Nature: **non-blocking (warning only)**
+- Purpose:
+    - early validation
+    - observability
+- Output: CSV reports in data/reports/
+
+### Final Data Quality (Foundation)
+- Location: sql/qc/qc_foundation.sql
+- Nature: **blocking (fail hard)**
+- Purpose: guarantee foundation readiness
+- Output: CSV reports in data/reports/
+- Examples:
+    - - foreign key integrity
+    - - null critical fields
+    - - invalid measures
+    - - orphan records
+If any check fails → pipeline stops.
+
+---
+
+## 🔄 Pipeline Workflow
+```text
+Initialize Database
+→ Data Ingestion
+→ Staging Load
+→ Early Data Quality (warning)
+→ Build Foundation
+→ Final Data Quality (fail hard)
+→ Build Marts
+```
+
+---
+
+## 📊 Business Marts (LOCKED)
+
+Phase-2 explicitly builds only three marts to avoid scope creep:
+
+### 1️⃣ mart_sales_daily
+- Grain: 1 row per date
+- Purpose: daily sales performance monitoring
+
+### 2️⃣ mart_product_performance
+- Grain: 1 row per product
+- Purpose: product & category performance analysis
+
+### 3️⃣ mart_customer_summary
+- Grain: 1 row per customer
+- Purpose: customer value & behavior summary
+
+No additional marts are built in Phase-2.
 
 ---
 
@@ -109,8 +194,12 @@ All pipeline steps are orchestrated using a `Makefile`.
 
 Run individual steps:
 ```bash
+make init-db
 make ingest
 make staging
+make data-quality-checks-staging
+make foundation
+make final-data-quality-checks
 make marts
 ```
 
@@ -130,14 +219,15 @@ make run-all
 
 ---
 
-## 🎯 Project Scope
+## 🎯 Design Philosophy
 
-This project focuses on:
+This pipeline prioritizes:
 
-- pipeline structure
-- data modeling
-- reproducibility
-- engineering best practices
+- Clarity over cleverness
+- Deterministic over incremental
+- Explicit decisions over implicit magic
+
+Unnecessary complexity is intentionally avoided.
 
 ---
 
