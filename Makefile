@@ -14,7 +14,7 @@ export PYTHONPATH := $(PROJECT_ROOT)
 
 init-db:
 	@echo "Initializing database tables..."
-	$(PYTHON) src/init_db.py
+	$(PYTHON) src/utils/init_db.py
 
 ingest:
 	@echo "Running ingestion..."

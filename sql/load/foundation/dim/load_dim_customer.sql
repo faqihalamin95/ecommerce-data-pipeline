@@ -1,5 +1,5 @@
 -- TRUNCATE AND LOAD dim_customer dimension table
-TRUNCATE TABLE foundation.dim_customer;
+TRUNCATE TABLE foundation.dim_customer CASCADE;
 
 -- Seed unknown customer record for referential integrity
 INSERT INTO foundation.dim_customer (

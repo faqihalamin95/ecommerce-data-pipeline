@@ -1,5 +1,5 @@
 -- TRUNCATE AND LOAD dim_date dimension table
-TRUNCATE TABLE foundation.dim_date;
+TRUNCATE TABLE foundation.dim_date CASCADE;
 
 -- Seed unknown date record for referential integrity
 INSERT INTO foundation.dim_date (

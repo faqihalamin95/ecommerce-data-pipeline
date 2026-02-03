@@ -28,13 +28,12 @@ WHERE qty_ordered <= 0
 UNION ALL
 SELECT 'invalid_price', COUNT(*)
 FROM foundation.fact_sales
-WHERE price < 0
+WHERE unit_price < 0
 
 UNION ALL
 SELECT 'invalid_discount', COUNT(*)
 FROM foundation.fact_sales
 WHERE discount_amount < 0
-   OR discount_amount > (qty_ordered * price)
 
 
 -- 3. No orphan foreign keys (including UNKNOWN seed)

@@ -15,7 +15,7 @@ SCHEMAS = [
     "raw",
     "staging",
     "foundation",
-    "mart"
+    "marts"
 ]
 
 def run_ddl_from_folder(conn, folder_path: Path):
@@ -34,6 +34,10 @@ def init_tables():
     print("Initializing database schemas and tables...")
 
     with engine.begin() as conn:
+        # Drop existing schemas (cascading)
+        for schema in SCHEMAS:
+            conn.execute(text(f"DROP SCHEMA IF EXISTS {schema} CASCADE;"))
+
         # Create schemas
         for schema in SCHEMAS:
             conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema};"))

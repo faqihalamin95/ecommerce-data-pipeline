@@ -17,11 +17,27 @@ def run():
     # from different working directories
     project_root = Path(__file__).resolve().parents[2]
     foundation_dir = project_root / "sql" / "load" / "foundation"
-    sql_files = sorted(foundation_dir.glob("*.sql"))
+    fact_dir = foundation_dir / "fact"
+    dim_dir = foundation_dir / "dim"
 
-    if not sql_files:
-        raise FileNotFoundError(f"No SQL files found in directory: {foundation_dir}")
-    for file_path in sql_files:
+    # NOTE: Dimension tables are expected to be built prior to fact tables
+
+    if not dim_dir.exists():
+        raise FileNotFoundError(f"No SQL files found in directory: {dim_dir}")
+    dim_files = sorted(dim_dir.glob("*.sql"))
+    for file_path in dim_files:
+        try:
+            execute_sql_file(engine, file_path)
+            print(f"Success: {file_path.name}")
+        except Exception as e:
+            # Fail fast: stop the pipeline on any critical staging error
+            print(f"Error executing {file_path.name}: {e}")
+            raise
+
+    if not fact_dir.exists():
+        raise FileNotFoundError(f"No SQL files found in directory: {fact_dir}")
+    fact_files = sorted(fact_dir.glob("*.sql"))
+    for file_path in fact_files:
         try:
             execute_sql_file(engine, file_path)
             print(f"Success: {file_path.name}")

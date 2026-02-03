@@ -1,8 +1,8 @@
 -- TRUNCATE AND LOAD mart_product_performance
-TRUNCATE TABLE mart.mart_product_performance;
+TRUNCATE TABLE marts.mart_product_performance;
 
 -- load aggregated product performance metrics into mart_product_performance
-INSERT INTO mart.mart_product_performance (
+INSERT INTO marts.mart_product_performance (
     sku,
     category_name,
     total_orders,
@@ -20,16 +20,16 @@ SELECT
     COUNT(DISTINCT f.order_id)                      AS total_orders,
     SUM(f.qty_ordered)                              AS total_items_sold,
 
-    SUM(f.qty_ordered * f.price)                    AS gross_revenue,
+    SUM(f.qty_ordered * f.unit_price)               AS gross_revenue,
     SUM(f.discount_amount)                          AS total_discounts,
 
-    SUM(f.qty_ordered * f.price)
+    SUM(f.qty_ordered * f.unit_price)
         - SUM(f.discount_amount)                    AS net_revenue,
 
     CASE
         WHEN SUM(f.qty_ordered) = 0 THEN 0
         ELSE
-            SUM(f.qty_ordered * f.price)
+            SUM(f.qty_ordered * f.unit_price)
             / SUM(f.qty_ordered)
     END                                             AS average_price,
 

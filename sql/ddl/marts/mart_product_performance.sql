@@ -1,6 +1,6 @@
 -- Grain 1 row per product(sku)
 -- Aggregated product performance metrics
-CREATE TABLE IF NOT EXISTS mart.mart_product_performance (
+CREATE TABLE IF NOT EXISTS marts.mart_product_performance (
     sku                  TEXT UNIQUE NOT NULL,
     category_name        TEXT,
     total_orders         INTEGER NOT NULL DEFAULT 0,

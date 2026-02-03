@@ -1,8 +1,8 @@
 -- TRUNCATE AND LOAD mart_sales_daily
-TRUNCATE TABLE mart.mart_sales_daily;
+TRUNCATE TABLE marts.mart_sales_daily;
 
 -- load aggregated daily sales metrics into mart_sales_daily
-INSERT INTO mart.mart_sales_daily (
+INSERT INTO marts.mart_sales_daily (
     sales_date,
     is_weekend,
     total_orders,
@@ -22,7 +22,7 @@ SELECT
 
     SUM(f.discount_amount)                        AS total_discounts,
 
-    SUM(f.qty_ordered * f.price)
+    SUM(f.qty_ordered * f.unit_price)
         - SUM(f.discount_amount)                  AS total_revenue,
 
     SUM(f.qty_ordered)                            AS total_items_sold,
@@ -31,7 +31,7 @@ SELECT
         WHEN COUNT(DISTINCT f.order_id) = 0 THEN 0
         ELSE
             (
-                SUM(f.qty_ordered * f.price)
+                SUM(f.qty_ordered * f.unit_price)
                 - SUM(f.discount_amount)
             ) / COUNT(DISTINCT f.order_id)
     END                                           AS average_order_value

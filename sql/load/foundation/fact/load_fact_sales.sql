@@ -9,7 +9,7 @@ INSERT INTO foundation.fact_sales (
     order_id,
     item_id,
     qty_ordered,
-    price,
+    unit_price,
     discount_amount
 )
 SELECT
@@ -19,7 +19,7 @@ SELECT
     s.increment_id::TEXT         AS order_id,
     s.item_id::TEXT              AS item_id,
     s.qty_ordered,
-    s.price,
+    s.price                      AS unit_price,
     s.discount_amount
 FROM staging.stg_pakistan_ecommerce s
 LEFT JOIN foundation.dim_date d
