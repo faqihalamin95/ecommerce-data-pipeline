@@ -6,7 +6,7 @@ PYTHON := python3
 PROJECT_ROOT := $(shell pwd)
 export PYTHONPATH := $(PROJECT_ROOT)
 
-.PHONY: init-db ingest staging marts test run-all
+.PHONY: init-db ingest staging data-quality-checks-staging foundation final-data-quality-checks marts run-all
 
 # ===============================
 # Core Pipeline Steps
@@ -14,7 +14,7 @@ export PYTHONPATH := $(PROJECT_ROOT)
 
 init-db:
 	@echo "Initializing database tables..."
-	$(PYTHON) init_db.py
+	$(PYTHON) src/init_db.py
 
 ingest:
 	@echo "Running ingestion..."
@@ -24,25 +24,29 @@ staging:
 	@echo "Running staging data quality checks..."
 	$(PYTHON) src/staging/stg_pakistan_ecommerce.py 
 
-# First level data quality checks
-data-quality-checks:
+# First level data quality checks (staging)
+data-quality-checks-staging:
 	@echo "Running staging data quality tests..."
-	$(PYTHON) data_quality/qc_raw_pakistan_ecommerce.py
+	$(PYTHON) src/qc/qc_staging.py
+
+foundation:
+	@echo "Building data foundation..."
+	$(PYTHON) src/foundation/load_foundation.py
+
+# Final Quality Gate (foundation/fact tables)
+final-data-quality-checks:
+	@echo "Running final fact data quality tests..."
+	$(PYTHON) src/qc/qc_foundation.py
 
 marts:
 	@echo "Building data marts..."
 	$(PYTHON) src/marts/load_marts.py
 
-# Final Quality Gate
-test:
-	@echo "Running final fact data quality tests..."
-	psql -U postgres -d ecommerce_dwh -f tests/fact_sales_quality.sql
-
 # ===============================
 # Full Pipeline
 # ===============================
 
-run-all: init-db ingest staging data-quality-checks marts test
+run-all: init-db ingest staging data-quality-checks-staging foundation final-data-quality-checks marts
 	@echo "========================================"
 	@echo "PIPELINE COMPLETED — ALL TESTS PASSED"
 	@echo "========================================"

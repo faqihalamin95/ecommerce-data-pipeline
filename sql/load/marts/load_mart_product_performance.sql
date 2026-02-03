@@ -14,7 +14,7 @@ INSERT INTO mart.mart_product_performance (
     total_customers
 )
 SELECT
-    p.sku                                            AS sku,
+    p.sku                                           AS sku,
     p.category_name                                 AS category_name,
 
     COUNT(DISTINCT f.order_id)                      AS total_orders,

@@ -25,8 +25,8 @@ SELECT
     SUM(f.qty_ordered * f.price)
         - SUM(f.discount_amount)                       AS net_revenue,
 
-    MIN(d.full_date)                                   AS first_order_date,
-    MAX(d.full_date)                                   AS last_order_date,
+    c.first_order_date                                 AS first_order_date,
+    c.last_order_date                                  AS last_order_date,
 
     CASE
         WHEN COUNT(DISTINCT f.order_id) = 0 THEN 0
