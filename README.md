@@ -3,7 +3,7 @@
 ## 📌 Overview
 This project implements an **end-to-end data warehouse pipeline** using a real-world e-commerce dataset (Pakistan Largest E-Commerce Dataset).
 
-The pipeline transforms raw transactional CSV data into **business-ready marts** through a clearly defined, reproducible, and auditable workflow stored in PostgreSQL.
+The pipeline transforms raw transactional CSV data into **business-ready marts** through a clearly defined and reproducible workflow stored in PostgreSQL.
 
 The primary objective of this project is to demonstrate **data engineering fundamentals** including:
 - deterministic batch processing
@@ -23,9 +23,9 @@ CSV Source File
 ↓
 Raw Layer
 ↓
-Staging Layer (data normalization & QC)
+Staging Layer
 ↓
-Foundation Layer (Star schema & Final QC)
+Foundation Layer
 ↓
 Marts Layer 
 ```
@@ -39,14 +39,15 @@ Each layer has clear responsibility boundaries and is executed as a separate pip
 ecommerce-data-pipeline/
 │
 ├── data/
-│   ├── raw/          # Source CSV data (post-ingestion)
-│   └── reports/      # Data quality reports (CSV)
+│   ├── raw/
+│   └── reports/
 │
 ├── src/
-│   ├── ingestion/    # CSV → raw ingestion (pandas)
-│   ├── qc/           # Data quality execution logic
-│   ├── foundation/   # Foundation layer orchestration
-│   ├── marts/        # Marts layer orchestration
+│   ├── ingestion/
+│   ├── staging/
+│   ├── foundation/
+│   ├── marts/
+│   ├── qc/
 │   └── utils/
 │       ├── db.py
 │       └── init_db.py
@@ -103,7 +104,6 @@ ecommerce-data-pipeline/
     - a BI consumption layer
     - a storage layer
     - a place for business aggregation
-All downstream marts must be built from foundation.
 
 ### 4️⃣ Marts Layer
 - Business consumption layer.
@@ -111,6 +111,8 @@ All downstream marts must be built from foundation.
     - Built only from foundation
     - Contains business-level aggregations and reshaping
     - No surrogate keys or foreign keys
+
+All downstream marts must be built from foundation.
 
 ---
 
@@ -168,7 +170,7 @@ Initialize Database
 
 ---
 
-## 📊 Business Marts (LOCKED)
+## 📊 Business Marts
 
 Explicitly builds only three marts to avoid scope creep:
 
@@ -183,6 +185,8 @@ Explicitly builds only three marts to avoid scope creep:
 ### 3️⃣ mart_customer_summary
 - Grain: 1 row per customer
 - Purpose: customer value & behavior summary
+
+Each mart has a clearly defined grain and is rebuilt deterministically.
 
 ---
 
