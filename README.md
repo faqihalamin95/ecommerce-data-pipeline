@@ -76,9 +76,10 @@ erDiagram
         bool is_weekend
     }
 
-    dim_customer ||--o{ fact_sales : "places"
-    dim_product ||--o{ fact_sales : "contains"
-    dim_date ||--o{ fact_sales : "happens_on"
+%% Relationships based on: Ref: fact_sales < table
+    dim_customer ||--o{ fact_sales : "FK: customer_key"
+    dim_product ||--o{ fact_sales : "FK: product_key"
+    dim_date ||--o{ fact_sales : "FK: date_key"
 ```
 
 ---
