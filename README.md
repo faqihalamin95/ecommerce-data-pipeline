@@ -34,6 +34,55 @@ Each layer has clear responsibility boundaries and is executed as a separate pip
 
 ---
 
+## 📐 Dimensional Modeling (Foundation Layer)
+The core of this pipeline is a Star Schema implemented in the Foundation Layer. This design optimizes the data for analytical queries by separating entities into Dimensions and transactions into a Fact table.
+
+```mermaid
+erDiagram
+    fact_sales {
+        bigint sales_key PK
+        int date_key FK
+        int product_key FK
+        int customer_key FK
+        text order_id
+        text item_id
+        int qty_ordered
+        int unit_price
+        int discount_amount
+    }
+
+    dim_customer {
+        int customer_key PK
+        text customer_id
+        date customer_since
+        date first_order_date
+        date last_order_date
+    }
+
+    dim_product {
+        int product_key PK
+        text sku
+        text category_name
+    }
+
+    dim_date {
+        int date_key PK
+        date full_date
+        int day
+        int month
+        text month_name
+        int year
+        text day_name
+        bool is_weekend
+    }
+
+    dim_customer ||--o{ fact_sales : "places"
+    dim_product ||--o{ fact_sales : "contains"
+    dim_date ||--o{ fact_sales : "happens_on"
+```
+
+---
+
 ## 📂 Project Structure
 ```text
 ecommerce-data-pipeline/
